@@ -1,21 +1,24 @@
 import os
 import requests
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from deep_translator import GoogleTranslator
 from collections import Counter
 
 def run_local_scraping():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    wait = WebDriverWait(driver, 10)
     
     try:
         driver.get("https://elpais.com/opinion/")
-        driver.implicitly_wait(10)
 
         try:
-            cookie_btn = driver.find_element(By.ID, "didomi-notice-agree-button")
+            cookie_btn = wait.until(EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button")))
             cookie_btn.click()
         except:
             pass
@@ -46,8 +49,10 @@ def run_local_scraping():
         print("\n--- TRANSLATED HEADERS ---")
         for h in headers_en: print(h)
 
-        all_words = " ".join(headers_en).lower().split()
-        counts = Counter(all_words)
+        all_words = " ".join(headers_en).lower()
+        words = re.findall(r'\b\w+\b', all_words)
+        
+        counts = Counter(words)
         
         print("\n--- REPEATED WORDS (>2) ---")
         for word, count in counts.items():
